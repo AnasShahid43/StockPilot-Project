@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Product - StockPilot</title>
+  <link rel="icon" type="image/png" href="/static/images/favicon.ico">
+  <link rel="stylesheet" href="/static/libs/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/libs/bootstrap-icons/bootstrap-icons.css">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+
+<body>
+
+  <div class="sidebar-wrapper" id="sidebar">
+    <a href="/" class="sidebar-brand">
+      <i class="bi bi-box-seam-fill"></i>
+      <span>StockPilot</span>
+    </a>
+    <div class="flex-grow-1 overflow-y-auto">
+      <div class="sidebar-menu-section">
+        <div class="sidebar-menu-title">Menu</div>
+        <ul class="sidebar-menu-list">
+          <li class="sidebar-menu-item">
+            <a href="/" class="sidebar-menu-link" title="Dashboard">
+              <i class="bi bi-grid-fill"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="/#products-table" class="sidebar-menu-link active" title="All Products">
+              <i class="bi bi-table"></i>
+              <span>All Products</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="/#low-stock-alerts" class="sidebar-menu-link" title="Low Stock Alerts">
+              <i class="bi bi-exclamation-triangle"></i>
+              <span>Low Stock Alerts</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="sidebar-profile">
+      <img src="/static/images/avatar.png" alt="Administrator" class="sidebar-profile-img">
+      <div class="sidebar-profile-info">
+        <div class="sidebar-profile-name">Administrator</div>
+        <div class="sidebar-profile-email">admin@stockpilot.com</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-wrapper">
+    <header class="navbar-custom">
+      <div class="navbar-left">
+        <button class="sidebar-toggle-btn me-2" id="sidebar-toggle" aria-label="Toggle Navigation">
+          <i class="bi bi-list"></i>
+        </button>
+        <div class="ms-2">
+          <span class="navbar-profile-name">Edit Product</span>
+        </div>
+      </div>
+      <div class="navbar-actions">
+        <a href="/" class="btn-quick-action text-decoration-none">
+          <i class="bi bi-arrow-left"></i>
+          <span>Back to Dashboard</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Edit Product</h1>
+        <p class="page-subtitle">Product, variant, SKU aur stock details update karein.</p>
+      </div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8 col-xl-6">
+        <div class="card p-4">
+          <form action="/edit-variant/{{ p.variant_id }}" method="post">
+            <div class="mb-3">
+              <label class="form-label-custom" for="productName">Product Name</label>
+              <input type="text" class="form-control-custom" id="productName" name="product_name"
+                value="{{ p.product_name }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label-custom" for="variantName">Variant Name</label>
+              <input type="text" class="form-control-custom" id="variantName" name="variant_name"
+                value="{{ p.variant_name }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label-custom" for="sku">SKU (optional)</label>
+              <input type="text" class="form-control-custom" id="sku" name="sku" value="{{ p.sku }}">
+            </div>
+            <div class="row g-3 mb-4">
+              <div class="col-6">
+                <label class="form-label-custom" for="reorderPoint">Reorder Point (Alert Level)</label>
+                <input type="number" class="form-control-custom" id="reorderPoint" name="reorder_point"
+                  value="{{ p.reorder_point }}" min="0" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label-custom" for="stock">Current Stock Quantity</label>
+                <input type="number" class="form-control-custom" id="stock" name="stock" value="{{ p.stock }}" min="0"
+                  required>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn-custom btn-custom-primary flex-grow-1">
+                <i class="bi bi-check-lg"></i> Save Changes
+              </button>
+              <a href="/" class="btn-custom btn-custom-light flex-grow-1 text-center text-decoration-none">
+                Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer-custom">
+      <div class="footer-left">
+        <span class="footer-logo"><i class="bi bi-box-seam-fill"></i> StockPilot</span>
+        <span class="footer-separator">|</span>
+        <span class="footer-copy">&copy; 2026 StockPilot. Inventory management made simple.</span>
+      </div>
+      <div class="footer-right">
+        <ul class="footer-links">
+          <li><a href="/" class="footer-link">Dashboard</a></li>
+          <li><a href="/#products-table" class="footer-link">Products</a></li>
+        </ul>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/static/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidebar = document.querySelector('.sidebar-wrapper');
+      const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+      const overlay = document.createElement('div');
+      overlay.className = 'sidebar-overlay';
+      document.body.appendChild(overlay);
+      if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          sidebar.classList.toggle('show');
+          overlay.classList.toggle('show', sidebar.classList.contains('show'));
+        });
+        overlay.addEventListener('click', function () {
+          sidebar.classList.remove('show');
+          overlay.classList.remove('show');
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

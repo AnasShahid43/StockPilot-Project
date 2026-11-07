@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockPilot Dashboard</title>
+  <meta name="description" content="StockPilot - Inventory & stock management dashboard">
+  <meta name="author" content="StockPilot">
+
+  <link rel="icon" type="image/png" href="/static/images/favicon.ico">
+
+  <!-- Local Third-Party Libraries -->
+  <link rel="stylesheet" href="/static/libs/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/libs/bootstrap-icons/bootstrap-icons.css">
+  <link rel="stylesheet" href="/static/libs/apexcharts/apexcharts.css">
+  <link rel="stylesheet" href="/static/libs/flatpickr/flatpickr.min.css">
+
+  <!-- Spark Admin design system -->
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+
+<body>
+
+  <!-- ==========================================
+         START: Sidebar Component
+         ========================================== -->
+  <div class="sidebar-wrapper" id="sidebar">
+    <a href="/" class="sidebar-brand">
+      <i class="bi bi-box-seam-fill"></i>
+      <span>StockPilot</span>
+    </a>
+
+    <div class="flex-grow-1 overflow-y-auto">
+      <div class="sidebar-menu-section">
+        <div class="sidebar-menu-title">Menu</div>
+        <ul class="sidebar-menu-list">
+          <li class="sidebar-menu-item">
+            <a href="/" class="sidebar-menu-link active" title="Dashboard">
+              <i class="bi bi-grid-fill"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="#products-table" class="sidebar-menu-link" title="All Products">
+              <i class="bi bi-table"></i>
+              <span>All Products</span>
+              <span class="sidebar-menu-badge">{{ total_variants }}</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="#low-stock-alerts" class="sidebar-menu-link" title="Low Stock Alerts">
+              <i class="bi bi-exclamation-triangle"></i>
+              <span>Low Stock Alerts</span>
+              {% if low_stock_count %}<span class="sidebar-menu-badge">{{ low_stock_count }}</span>{% endif %}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-menu-section">
+        <div class="sidebar-menu-title">Actions</div>
+        <ul class="sidebar-menu-list">
+          <li class="sidebar-menu-item">
+            <button type="button" class="sidebar-menu-link border-0 bg-transparent w-100 text-start"
+              data-bs-toggle="modal" data-bs-target="#addProductModal" title="Add Product">
+              <i class="bi bi-plus-circle"></i>
+              <span>Add Product</span>
+            </button>
+          </li>
+          <li class="sidebar-menu-item">
+            <button type="button" class="sidebar-menu-link border-0 bg-transparent w-100 text-start"
+              data-bs-toggle="modal" data-bs-target="#uploadModal" title="Upload Excel">
+              <i class="bi bi-file-earmark-arrow-up"></i>
+              <span>Upload Excel</span>
+            </button>
+          </li>
+          <li class="sidebar-menu-item">
+            <button type="button" class="sidebar-menu-link border-0 bg-transparent w-100 text-start"
+              data-bs-toggle="modal" data-bs-target="#movementModal" title="Record Movement">
+              <i class="bi bi-arrow-left-right"></i>
+              <span>Record Movement</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-menu-section">
+        <div class="sidebar-menu-title">Reports</div>
+        <ul class="sidebar-menu-list">
+          <li class="sidebar-menu-item">
+            <a href="/send-email-report/" class="sidebar-menu-link" title="Send Daily Report">
+              <i class="bi bi-envelope-paper"></i>
+              <span>Email Daily Report</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="/daily-summary/" class="sidebar-menu-link" title="Daily Summary">
+              <i class="bi bi-chat-left-text"></i>
+              <span>Daily Summary</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sidebar-profile">
+      <img src="/static/images/avatar.png" alt="Administrator" class="sidebar-profile-img"
+        onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop'">
+      <div class="sidebar-profile-info">
+        <div class="sidebar-profile-name">Administrator</div>
+        <div class="sidebar-profile-email">admin@stockpilot.com</div>
+      </div>
+    </div>
+  </div>
+  <!-- END: Sidebar Component -->
+
+
+  <!-- ==========================================
+         START: Main Content Area
+         ========================================== -->
+  <div class="main-wrapper">
+
+    <!-- START: Top Navbar Component -->
+    <header class="navbar-custom">
+      <div class="navbar-left">
+        <button class="btn-desktop-toggle d-none d-xl-flex align-items-center justify-content-center me-3"
+          id="desktop-sidebar-toggle" aria-label="Minimize Sidebar">
+          <i class="bi bi-chevron-bar-left"></i>
+        </button>
+        <button class="sidebar-toggle-btn me-2" id="sidebar-toggle" aria-label="Toggle Navigation">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <div class="dropdown ms-2">
+          <button class="btn-quick-action dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-plus-lg"></i>
+            <span>Create</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-quick-action">
+            <li class="dropdown-header">Quick Actions</li>
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addProductModal"><i
+                  class="bi bi-box-seam"></i> New Product</a></li>
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#uploadModal"><i
+                  class="bi bi-file-earmark-arrow-up"></i> Upload Excel</a></li>
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#movementModal"><i
+                  class="bi bi-arrow-left-right"></i> Record Movement</a></li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item" href="/send-email-report/"><i class="bi bi-envelope-paper"></i> Send Daily
+                Report</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="navbar-search-wrapper">
+        <input type="text" class="navbar-search-input" placeholder="Search products..." id="main-search">
+        <button class="navbar-search-btn" aria-label="Search">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+
+      <div class="navbar-actions">
+        <button class="navbar-action-btn me-1" aria-label="Toggle Fullscreen" id="btn-fullscreen">
+          <i class="bi bi-arrows-fullscreen"></i>
+        </button>
+        <div class="dropdown">
+          <button class="navbar-action-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false" data-bs-auto-close="outside">
+            <i class="bi bi-bell"></i>
+            {% if alerts %}<span class="navbar-action-badge"></span>{% endif %}
+          </button>
+          <div class="dropdown-menu dropdown-menu-end dropdown-menu-notification p-0">
+            <div class="notification-header">
+              <h6 class="notification-title">Low Stock Alerts</h6>
+              <a class="btn-clear-all" href="#low-stock-alerts">View all</a>
+            </div>
+            <div class="notification-list">
+              {% for alert in alerts[:4] %}
+              <a href="#low-stock-alerts" class="notification-item">
+                <div class="notification-icon bg-warning text-dark">
+                  <i class="bi bi-box-seam-fill"></i>
+                </div>
+                <div class="notification-content">
+                  <p class="notification-text"><strong>{{ alert.product }}</strong> ({{ alert.variant }})</p>
+                  <span class="notification-time">Sirf {{ alert.current_stock }} bache hain</span>
+                </div>
+                <span class="notification-unread-dot"></span>
+              </a>
+              {% else %}
+              <div class="p-3 text-muted-green">Sab stock theek hai. Koi alert nahi.</div>
+              {% endfor %}
+            </div>
+            <a href="#low-stock-alerts" class="notification-footer">View All Alerts</a>
+          </div>
+        </div>
+
+        <div class="dropdown ms-2">
+          <button class="navbar-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            <img src="/static/images/avatar.png" alt="Profile Image" class="navbar-profile-img">
+            <span class="navbar-profile-name d-none d-md-inline">Administrator</span>
+            <i class="bi bi-chevron-down navbar-profile-caret"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile">
+            <li class="dropdown-header">Welcome !</li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> My Account</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item text-danger" href="/"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+    <!-- END: Top Navbar Component -->
+
+    <!-- START: Page Header Banner -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Inventory, stock movement aur low stock alerts ek jagah.</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn-date-picker" type="button" data-bs-toggle="modal" data-bs-target="#movementModal">
+          <i class="bi bi-arrow-left-right"></i>
+          <span>Record Movement</span>
+        </button>
+        <button class="btn-date-picker" type="button" id="date-picker-trigger">
+          <i class="bi bi-calendar4-event"></i>
+          <span id="selected-date-range">All time</span>
+          <i class="bi bi-chevron-down ms-1"></i>
+        </button>
+      </div>
+    </div>
+    <!-- END: Page Header Banner -->
+
+    <!-- START: Flash messages -->
+    {% if product_added %}
+    <div class="alert-custom alert-custom-success mb-4">
+      <div class="alert-custom-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="alert-custom-content">Naya product kamyabi se add ho gaya!</div>
+      <button class="alert-custom-close" type="button" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+    {% endif %}
+    {% if upload_success %}
+    <div class="alert-custom alert-custom-success mb-4">
+      <div class="alert-custom-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="alert-custom-content">File kamyabi se upload ho gayi! Naye products list mein shamil ho gaye hain.</div>
+      <button class="alert-custom-close" type="button" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+    {% endif %}
+    {% if email_sent %}
+    <div class="alert-custom alert-custom-success mb-4">
+      <div class="alert-custom-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="alert-custom-content">Email kamyabi se bhej di gayi hai! Dukaandar ko report mil gayi hai.</div>
+      <button class="alert-custom-close" type="button" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+    {% endif %}
+    {% if deleted %}
+    <div class="alert-custom alert-custom-danger mb-4">
+      <div class="alert-custom-icon"><i class="bi bi-trash-fill"></i></div>
+      <div class="alert-custom-content">Product kamyabi se delete ho gaya!</div>
+      <button class="alert-custom-close" type="button" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+    {% endif %}
+    {% if updated %}
+    <div class="alert-custom alert-custom-success mb-4">
+      <div class="alert-custom-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="alert-custom-content">Product ki details update ho gayi hain!</div>
+      <button class="alert-custom-close" type="button" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+    {% endif %}
+    <!-- END: Flash messages -->
+
+    <!-- START: Main Layout Grid -->
+    <div class="row g-4">
+
+      <!-- TOP AREA: Stat cards -->
+      <div class="col-12">
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="card alert-green-card">
+              <div class="position-relative z-index-2">
+                <span class="alert-green-badge">{{ 'Alert' if low_stock_count else 'Status' }}</span>
+                <div class="alert-green-date">{{ total_variants }} variants tracked</div>
+                <div class="alert-green-text">
+                  {% if low_stock_count %}
+                  {{ low_stock_count }} item{{ 's' if low_stock_count != 1 else '' }} khatam hone wale hain
+                  {% else %}
+                  Sab stock theek hai, koi alert nahi
+                  {% endif %}
+                </div>
+              </div>
+              <a href="#low-stock-alerts" class="alert-green-link z-index-2">
+                <span>See Low Stock</span>
+                <i class="bi bi-arrow-right"></i>
+              </a>
+
+              <svg class="alert-green-bg-shape" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g transform="translate(50,50)">
+                  <rect x="-6" y="-45" width="12" height="90" rx="6" ry="6" fill="#B45309" />
+                  <rect x="-6" y="-45" width="12" height="90" rx="6" ry="6" fill="#B45309" transform="rotate(60)" />
+                  <rect x="-6" y="-45" width="12" height="90" rx="6" ry="6" fill="#B45309" transform="rotate(120)" />
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="card card-stat d-flex flex-column justify-content-between">
+              <div>
+                <div class="card-header">
+                  <span class="stat-label">Total Stock Units</span>
+                  <div class="dropdown">
+                    <button class="card-more-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                      aria-label="More Options">
+                      <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
+                      <li><a class="dropdown-item" href="#products-table"><i class="bi bi-table"></i> View Products</a>
+                      </li>
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                          data-bs-target="#uploadModal"><i class="bi bi-file-earmark-arrow-up"></i> Upload Excel</a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="stat-value">{{ total_stock }}</div>
+                <div class="trend-badge trend-up">
+                  <i class="bi bi-arrow-up-right"></i>
+                  <span>{{ total_variants }} variants across {{ total_products }} products</span>
+                </div>
+              </div>
+              <div class="sparkline-container sparkline-card-footer">
+                <div id="income-sparkline"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="card card-stat d-flex flex-column justify-content-between">
+              <div>
+                <div class="card-header">
+                  <span class="stat-label">Low Stock Alerts</span>
+                  <div class="dropdown">
+                    <button class="card-more-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                      aria-label="More Options">
+                      <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
+                      <li><a class="dropdown-item" href="#low-stock-alerts"><i class="bi bi-exclamation-triangle"></i>
+                          View Alerts</a></li>
+                      <li><a class="dropdown-item" href="/send-email-report/"><i class="bi bi-envelope-paper"></i> Email
+                          Report</a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="stat-value">{{ low_stock_count }}</div>
+                <div class="trend-badge {{ 'trend-down' if low_stock_count else 'trend-up' }}">
+                  <i class="bi {{ 'bi-arrow-down-left' if low_stock_count else 'bi-arrow-up-right' }}"></i>
+                  <span>{{ out_of_stock_count }} out of stock</span>
+                </div>
+              </div>
+              <div class="sparkline-container sparkline-card-footer">
+                <div id="return-sparkline"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- END: TOP AREA -->
+
+      <!-- LEFT AREA -->
+      <div class="col-xl-9 col-lg-8">
+        <div class="row g-4">
+          <!-- Stock movement chart -->
+          <div class="col-12">
+            <div class="card mb-0">
+              <div class="card-header mb-2">
+                <h2 class="card-title">Stock Movement</h2>
+                <div class="d-flex gap-3 align-items-center">
+                  <div class="chart-legend-item">
+                    <span class="legend-dot bg-forest-medium"></span>
+                    <span class="chart-legend-label">Sold</span>
+                  </div>
+                  <div class="chart-legend-item">
+                    <span class="legend-dot bg-lime-accent"></span>
+                    <span class="chart-legend-label">Purchased</span>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex align-items-baseline gap-2 mb-3">
+                <span class="stat-value-amount">{{ total_stock }}</span>
+                <span class="trend-badge trend-up fs-xs">{{ low_stock_count }} low stock items</span>
+              </div>
+              <div id="revenue-chart"></div>
+            </div>
+          </div>
+
+          <!-- Recent movements -->
+          <div class="col-md-7 d-flex flex-column">
+            <div class="card h-100 flex-grow-1">
+              <div class="card-header">
+                <h2 class="card-title">Recent Movements</h2>
+                <div class="dropdown">
+                  <button class="card-more-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                    aria-label="More Options">
+                    <i class="bi bi-three-dots"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                        data-bs-target="#movementModal"><i class="bi bi-plus-lg"></i> Record Movement</a></li>
+                    <li><a class="dropdown-item" href="#products-table"><i class="bi bi-table"></i> All Products</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="transaction-list">
+                {% for m in recent_movements %}
+                <div class="transaction-item">
+                  <div class="transaction-icon bg-forest-light text-lime">
+                    <i class="bi {{ 'bi-cart-dash' if m.type == 'sale' else 'bi-box-arrow-in-down' }}"></i>
+                  </div>
+                  <div class="transaction-info">
+                    <div class="transaction-name">{{ m.product }} - {{ m.variant }}</div>
+                    <div class="transaction-date">{{ m.date.strftime('%b %d, %Y • %I:%M %p') }} • {{ m.type|capitalize }}
+                    </div>
+                  </div>
+                  <div class="transaction-amount {{ 'text-main' if m.type == 'sale' else 'text-success' }}">
+                    {{ '-' if m.type == 'sale' else '+' }}{{ m.qty }}
+                  </div>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted-green">
+                  <i class="bi bi-clock-history fs-3 d-block mb-2"></i>
+                  Abhi tak koi stock movement nahi hui.
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Product overview -->
+          <div class="col-md-5 d-flex flex-column">
+            <div class="card h-100 flex-grow-1">
+              <div class="card-header">
+                <h2 class="card-title">Product Overview</h2>
+                <div class="dropdown">
+                  <button class="card-more-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                    aria-label="More Options">
+                    <i class="bi bi-three-dots"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                        data-bs-target="#addProductModal"><i class="bi bi-plus-lg"></i> Add Product</a></li>
+                    <li><a class="dropdown-item" href="#products-table"><i class="bi bi-gear"></i> Manage</a></li>
+                  </ul>
+                </div>
+              </div>
+
+              {% for item in product_overview %}
+              <div class="progress-container">
+                <div class="progress-label-row">
+                  <span class="progress-label">{{ item.product }} <span class="text-muted-green">({{ item.variant
+                      }})</span></span>
+                  <span class="progress-value">{{ item.stock }}</span>
+                </div>
+                <div class="progress" role="progressbar" aria-label="{{ item.product }} stock"
+                  aria-valuenow="{{ item.percent }}" aria-valuemin="0" aria-valuemax="100">
+                  <div
+                    class="progress-bar {{ 'bg-brand-orange' if item.status != 'healthy' else 'bg-lime-accent' }}"
+                    style="width: {{ item.percent }}%"></div>
+                </div>
+              </div>
+              {% else %}
+              <div class="p-4 text-center text-muted-green">
+                <i class="bi bi-box-seam fs-3 d-block mb-2"></i>
+                Koi product nahi hai. "Add Product" se shuru karein.
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT AREA -->
+      <div class="col-xl-3 col-lg-4">
+        <div class="right-panel-wrapper d-flex flex-column gap-4 h-100">
+          <div class="card flex-grow-1 d-flex flex-column justify-content-between mb-0">
+            <div class="card-header mb-1">
+              <h2 class="card-title">Stock Health</h2>
+            </div>
+
+            <div id="views-chart"></div>
+
+            <div class="chart-legends-container">
+              <div class="chart-legend-item">
+                <span class="legend-dot bg-lime-accent"></span>
+                <span class="text-muted-green">Healthy</span>
+              </div>
+              <div class="chart-legend-item">
+                <span class="legend-dot bg-brand-orange"></span>
+                <span class="text-muted-green">Low Stock</span>
+              </div>
+              <div class="chart-legend-item">
+                <span class="legend-dot" style="background-color: var(--sys-red);"></span>
+                <span class="text-muted-green">Out of Stock</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="promo-banner-card">
+            <svg class="promo-banner-bg-shape" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g transform="translate(50,50)">
+                <rect x="-6" y="-45" width="12" height="90" rx="6" ry="6" fill="#B45309" />
+                <rect x="-6" y="-45" width="12" height="90" rx="6" ry="6" fill="#B45309" transform="rotate(60)" />
+                <rect x="-6" y="-45" width="12" height="90" rx="6" ry="6" fill="#B45309" transform="rotate(120)" />
+              </g>
+            </svg>
+
+            {% if low_stock_count %}
+            <h3 class="promo-title">{{ low_stock_count }} item{{ 's' if low_stock_count != 1 else '' }} khatam hone wale
+              hain.</h3>
+            <p class="promo-desc">Foran order lagwayen aur dukaandar ko report bhejein.</p>
+            {% else %}
+            <h3 class="promo-title">Sab stock theek hai.</h3>
+            <p class="promo-desc">Aaj koi item khatam nahi ho raha. Report bhej kar confirm karein.</p>
+            {% endif %}
+            <a href="/send-email-report/" class="btn-promo d-inline-block">Send daily report</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- END: Main Layout Grid -->
+
+    <!-- START: Low Stock Alerts -->
+    <div class="card mt-4" id="low-stock-alerts">
+      <div class="card-header">
+        <h2 class="card-title">Low Stock Alerts</h2>
+        <span class="trend-badge {{ 'trend-down' if low_stock_count else 'trend-up' }}">{{ low_stock_count }}
+          alerts</span>
+      </div>
+      {% if alerts %}
+      <div class="transaction-list">
+        {% for alert in alerts %}
+        <div class="transaction-item">
+          <div class="transaction-icon" style="background-color: var(--sys-red-bg); color: var(--sys-red);">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <div class="transaction-info">
+            <div class="transaction-name">{{ alert.product }} - {{ alert.variant }}</div>
+            <div class="transaction-date">Reorder point se kam stock</div>
+          </div>
+          <div class="transaction-amount text-danger">{{ alert.current_stock }} left</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="p-4 text-center text-muted-green">
+        <i class="bi bi-shield-check fs-3 d-block mb-2"></i>
+        Sab theek hai! Aaj koi item khatam nahi ho raha.
+      </div>
+      {% endif %}
+    </div>
+    <!-- END: Low Stock Alerts -->
+
+    <!-- START: Products Table -->
+    <div class="table-card-custom mt-4" id="products-table">
+      <div class="table-header-control">
+        <div class="table-search-box">
+          <i class="bi bi-search table-search-icon"></i>
+          <input type="text" class="table-search-input" id="table-search"
+            placeholder="Search product, variant or SKU...">
+        </div>
+        <div class="table-filter-group">
+          <button class="btn-table-action" type="button" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="bi bi-plus-lg"></i> Add Product
+          </button>
+          <button class="btn-table-action" type="button" data-bs-toggle="modal" data-bs-target="#uploadModal">
+            <i class="bi bi-file-earmark-arrow-up"></i> Upload
+          </button>
+          <button class="btn-table-action" type="button" data-bs-toggle="modal" data-bs-target="#movementModal">
+            <i class="bi bi-arrow-left-right"></i> Movement
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Variant</th>
+              <th>SKU</th>
+              <th>Stock Qty</th>
+              <th>Reorder Point</th>
+              <th>Status</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in products %}
+            <tr data-search="{{ p.product }} {{ p.variant }} {{ p.sku }}">
+              <td class="table-product-name">{{ p.product }}</td>
+              <td>{{ p.variant }}</td>
+              <td class="text-muted-green">{{ p.sku or '—' }}</td>
+              <td class="table-amount">{{ p.stock }}</td>
+              <td>{{ p.reorder_point }}</td>
+              <td>
+                {% if p.stock <= 0 %}
+                <span class="badge-table failed">Out of Stock</span>
+                {% elif p.stock <= p.reorder_point %} <span class="badge-table pending">Low Stock</span>
+                  {% else %}
+                  <span class="badge-table success">In Stock</span>
+                  {% endif %}
+              </td>
+              <td>
+                <div class="d-flex justify-content-center gap-1">
+                  <a href="/edit-variant/{{ p.variant_id }}" class="table-btn-action" title="Edit"><i
+                      class="bi bi-pencil"></i></a>
+                  <a href="/delete-variant/{{ p.variant_id }}" class="table-btn-action delete" title="Delete"
+                    onclick="return confirm('Kya aap waqai is product ko delete karna chahte hain?');"><i
+                      class="bi bi-trash"></i></a>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7">
+                <div class="p-4 text-center text-muted-green">
+                  <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                  Koi product nahi mila. Excel upload karein ya manually add karein.
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footer-control">
+        <div class="table-pagination-info">Showing <strong>{{ total_variants }}</strong> variants across
+          <strong>{{ total_products }}</strong> products</div>
+      </div>
+    </div>
+    <!-- END: Products Table -->
+
+    <!-- START: Footer -->
+    <footer class="footer-custom">
+      <div class="footer-left">
+        <span class="footer-logo">
+          <i class="bi bi-box-seam-fill"></i> StockPilot
+        </span>
+        <span class="footer-separator">|</span>
+        <span class="footer-copy">&copy; 2026 StockPilot. Inventory management made simple.</span>
+      </div>
+      <div class="footer-right">
+        <ul class="footer-links">
+          <li><a href="/" class="footer-link">Dashboard</a></li>
+          <li><a href="#products-table" class="footer-link">Products</a></li>
+          <li><a href="/send-email-report/" class="footer-link">Email Report</a></li>
+          <li><a href="/docs" class="footer-link">API Docs <span class="status-dot"></span></a></li>
+        </ul>
+      </div>
+    </footer>
+    <!-- END: Footer -->
+  </div>
+  <!-- END: Main Content Area -->
+
+  <!-- ==========================================
+         START: Modals
+         ========================================== -->
+
+  <!-- Add Product Modal -->
+  <div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form action="/add-product/" method="post">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label-custom" for="addProductName">Product Name</label>
+              <input type="text" class="form-control-custom" id="addProductName" name="product_name"
+                placeholder="e.g. Shirt" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label-custom" for="addVariantName">Variant</label>
+              <input type="text" class="form-control-custom" id="addVariantName" name="variant_name"
+                placeholder="e.g. Large" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label-custom" for="addSku">SKU (optional)</label>
+              <input type="text" class="form-control-custom" id="addSku" name="sku" placeholder="e.g. SHIRT-L">
+            </div>
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="form-label-custom" for="addStock">Current Stock</label>
+                <input type="number" class="form-control-custom" id="addStock" name="stock" min="0" value="0" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label-custom" for="addReorder">Alert Level</label>
+                <input type="number" class="form-control-custom" id="addReorder" name="reorder_point" min="0" value="5"
+                  required>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-custom btn-custom-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn-custom btn-custom-primary"><i class="bi bi-plus-lg"></i> Add Product</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Excel Modal -->
+  <div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Upload Excel / CSV</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form action="/upload-excel/" method="post" enctype="multipart/form-data">
+          <div class="modal-body">
+            <p class="text-muted-green mb-3">File mein yeh columns hone chahiye: <strong>product_name</strong>,
+              <strong>opening_stock</strong> (optional: category, cost_price, sell_price, reorder_point, variant_name,
+              sku).</p>
+            <input type="file" class="form-control-custom" name="file" accept=".xlsx, .csv" required>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-custom btn-custom-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn-custom btn-custom-warning"><i class="bi bi-file-earmark-arrow-up"></i>
+              Upload</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Record Movement Modal -->
+  <div class="modal fade" id="movementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Record Sale or Purchase</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {% if products %}
+          <div class="mb-3">
+            <label class="form-label-custom" for="movementProductSelect">Product</label>
+            <select class="form-select-custom" id="movementProductSelect">
+              {% for p in products %}
+              <option value="{{ p.variant_id }}">{{ p.product }} - {{ p.variant }} (Stock: {{ p.stock }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label-custom" for="movementQty">Quantity</label>
+            <input type="number" class="form-control-custom" id="movementQty" min="1" value="1">
+          </div>
+          <div id="movement-status" class="form-feedback-custom"></div>
+          {% else %}
+          <p class="text-muted-green mb-0">Pehle koi product add karein, phir movement record kar sakte hain.</p>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-custom btn-custom-light" data-bs-dismiss="modal">Cancel</button>
+          {% if products %}
+          <button type="button" class="btn-custom btn-custom-danger" data-movement="sale"><i
+              class="bi bi-cart-dash"></i> Sale</button>
+          <button type="button" class="btn-custom btn-custom-primary" data-movement="purchase"><i
+              class="bi bi-box-arrow-in-down"></i> Purchase</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END: Modals -->
+
+  <!-- Dashboard config (server data) -->
+  <script>
+    window.STOCKPILOT = {
+      chartLabels: {{ chart_labels | tojson }},
+      chartSales: {{ chart_sales | tojson }},
+      chartPurchases: {{ chart_purchases | tojson }},
+      sparkSales: {{ chart_sales | tojson }},
+      sparkPurchases: {{ chart_purchases | tojson }},
+      stockHealth: {{ stock_health | tojson }},
+      totalVariants: {{ total_variants | tojson }}
+    };
+  </script>
+
+  <!-- Local Third-Party Libraries -->
+  <script src="/static/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/libs/apexcharts/apexcharts.min.js"></script>
+  <script src="/static/libs/flatpickr/flatpickr.min.js"></script>
+
+  <!-- StockPilot dashboard controller -->
+  <script src="/static/js/stockpilot.js"></script>
+</body>
+
+</html>
